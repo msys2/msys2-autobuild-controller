@@ -6,7 +6,7 @@ authors = ["Jeremy Drake <github@jdrake.com>"]
 package-mode = false
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 Flask = "^3.0.2"
 requests = "^2.25.1"
 cryptography = ">=3.4.7"
@@ -15,7 +15,7 @@ gunicorn = "^23.0.0"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^7.0.0"
-mypy = "1.17.0"
+mypy = "1.17.1"
 types-requests = "^2.31.0.20240125"
 
 [build-system]
