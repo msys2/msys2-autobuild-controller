@@ -1,6 +1,6 @@
 FROM python:3.13-bookworm
 
-RUN python -m pip install "poetry==2.1.3"
+RUN python -m pip install "poetry==2.2.0"
 
 COPY . /app
 WORKDIR /app
