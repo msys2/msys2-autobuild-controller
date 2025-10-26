@@ -19,16 +19,16 @@ jobs:
   
     - name: Install dependencies
       run: |
-        pipx install poetry
-        poetry install
+        python -m pip install --upgrade uv
+        uv sync
 
     - name: Lint
       run: |
-        poetry run flake8
+        uv run flake8
 
     - name: Mypy
       run: |
-        poetry run mypy .
+        uv run mypy .
 
   deploy:
     permissions:

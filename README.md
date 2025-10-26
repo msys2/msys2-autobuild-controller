@@ -6,8 +6,7 @@ Get it running:
 * fill out `instance/application.cfg`
 
 ```console
-poetry install
-poetry run flask --app flask_app run
+uv run flask --app flask_app run
 ```
 
 ## GitHub App Registration
