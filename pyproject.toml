@@ -15,7 +15,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "flake8>=7.0.0,<8",
-    "mypy==1.18.2",
+    "mypy==1.19.0",
     "types-requests>=2.31.0.20240125,<3",
 ]
 
