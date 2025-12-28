@@ -24,7 +24,7 @@ jobs:
 
     - name: Lint
       run: |
-        uv run flake8
+        uv run ruff check
 
     - name: Mypy
       run: |

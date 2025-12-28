@@ -14,10 +14,18 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "flake8>=7.0.0,<8",
     "mypy==1.19.0",
+    "ruff>=0.14.10,<0.15.0",
     "types-requests>=2.31.0.20240125,<3",
 ]
 
 [tool.uv]
 package = false
+
+[tool.ruff]
+line-length = 133
+exclude = [".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = ["E741", "E402"]
