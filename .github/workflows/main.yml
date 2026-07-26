@@ -26,9 +26,9 @@ jobs:
       run: |
         uv run ruff check
 
-    - name: Mypy
+    - name: Type check
       run: |
-        uv run mypy .
+        uv run ty check
 
   deploy:
     permissions:

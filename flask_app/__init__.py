@@ -4,12 +4,14 @@
 import functools
 import hmac
 import json
-import requests
+import logging
 import secrets
 import sys
-import logging
-import urllib.parse
 import threading
+import urllib.parse
+from typing import TypedDict
+
+import requests
 
 from cryptography.fernet import Fernet
 from flask import Flask, request, abort, session, g, url_for, redirect, flash, render_template
@@ -31,9 +33,15 @@ with app.open_instance_resource(app.config['GITHUB_APP_KEY_FILE']) as keyfile:
     assert isinstance(data, bytes)
     app.config['GITHUB_APP_KEY'] = data.decode()
 
-GH_DEFAULTS = {
-    "seconds_between_requests": 0,
-    "lazy": True
+
+class GithubClientDefaults(TypedDict):
+    seconds_between_requests: float | None
+    lazy: bool
+
+
+GH_DEFAULTS: GithubClientDefaults = {
+    "seconds_between_requests": 0.0,
+    "lazy": True,
 }
 
 ACL: AccessControlList = app.config['ACL']
@@ -63,7 +71,13 @@ def decrypt_protected_var(ciphertext: str) -> str:
     return Fernet(app.config['FERNET_SECRET_KEY'].encode('utf-8')).decrypt(ciphertext.encode('utf-8')).decode('utf-8')
 
 
-def _get_autobuild_repo(fork: str, *, _gh_cache: dict[int, Github] = {}, _cache_lock=threading.RLock()) -> Repository:
+def _current_url() -> str:
+    endpoint = request.endpoint
+    assert endpoint is not None
+    return url_for(endpoint, **(request.view_args or {}))
+
+
+def _get_autobuild_repo(fork: str, *, _gh_cache: dict[str, Github] = {}, _cache_lock=threading.RLock()) -> Repository:
     with _cache_lock:
         if fork not in _gh_cache:
             installation = githubintegration.get_repo_installation(fork, 'msys2-autobuild')
@@ -118,7 +132,7 @@ def verify_login_token(func):
             is_valid = check_app_token(access_token)
         if not is_valid:
             clear_login_session()
-            return handle_login(url_for(request.endpoint, **request.view_args))
+            return handle_login(_current_url())
         return func(*args, **kwargs)
     return wrapper_verify_login_token
 
@@ -162,7 +176,7 @@ def _get_fork() -> str:
 def authenticated_index():
     fork = _get_fork()
     if request.method == 'POST':
-        return redirect(url_for(request.endpoint, **request.view_args))
+        return redirect(_current_url())
 
     repo = _get_autobuild_repo(fork)
     workflow = get_lazy_repo_workflow(repo, 'build.yml')
@@ -173,11 +187,11 @@ def authenticated_index():
 @app.route('/trigger', methods=('GET', 'POST'))
 def trigger():
     if not g.principal:
-        return handle_login(url_for(request.endpoint, **request.view_args))
+        return handle_login(_current_url())
 
     _get_fork()
     if request.method == 'POST':
-        return redirect(url_for(request.endpoint, **request.view_args))
+        return redirect(_current_url())
 
     if not ACL.is_granted(g.principal, AccessRights.TRIGGER_RUN):
         return abort(403, "Access denied")
@@ -187,11 +201,11 @@ def trigger():
 @app.route('/maint', methods=('GET', 'POST'))
 def maint():
     if not g.principal:
-        return handle_login(url_for(request.endpoint, **request.view_args))
+        return handle_login(_current_url())
 
     _get_fork()
     if request.method == 'POST':
-        return redirect(url_for(request.endpoint, **request.view_args))
+        return redirect(_current_url())
 
     if not ACL.is_granted(g.principal, AccessRights.CLEAR_FAILURES):
         return abort(403, "Access denied")
@@ -264,7 +278,7 @@ def cancel():
     fork = _get_fork()
     repo = _get_autobuild_repo(fork)
     if repo.get_workflow_run(int(request.form['id'])).cancel():
-        audit_log(g.principal, fork, 'cancel', request.form['id'])
+        audit_log(g.principal, fork, 'cancel', {'id': request.form['id']})
         flash("Workflow run was successfully cancelled")
     return redirect(url_for('index'))
 

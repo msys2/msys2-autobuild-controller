@@ -1,6 +1,6 @@
 FROM python:3.14-slim-trixie
 
-RUN python -m pip install "uv==0.11.2"
+RUN python -m pip install "uv==0.11.32"
 
 COPY . /app
 WORKDIR /app
